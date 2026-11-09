@@ -1,0 +1,7 @@
+pandas
+geopy
+folium
+streamlit
+streamlit-folium
+spacy
+https://github.com
