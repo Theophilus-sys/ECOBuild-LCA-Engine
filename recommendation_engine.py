@@ -26,11 +26,7 @@ st.caption(
 # ==========================================
 @st.cache_resource
 def load_spatial_nlp():
-    try:
-        return spacy.load("en_core_web_md")
-    except OSError:
-        os.system("python -m spacy download en_core_web_md")
-        return spacy.load("en_core_web_md")
+    return spacy.load("en_core_web_md")
 
 #Load model cleanly using streamlit's resource cache
 nlp = load_spatial_nlp()
