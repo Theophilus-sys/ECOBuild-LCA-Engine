@@ -4,4 +4,4 @@ folium
 streamlit
 streamlit-folium
 spacy
-https://github.com
+en_core_web_md @ https://github.com
