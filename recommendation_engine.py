@@ -4,7 +4,7 @@ import folium
 from streamlit_folium import st_folium
 from geopy.geocoders import ArcGIS
 import spacy
-import os
+from  spacy.cli import download
 
 # ==========================================
 # 1. APPLICATION GRAPHICS & PAGE CONFIG
@@ -24,12 +24,12 @@ st.caption(
 # ==========================================
 # 2. CACHED RESOURCE LOADING (NLP Optimization)
 # ==========================================
-@st.cache_resource
-def load_spatial_nlp():
-    return spacy.load("en_core_web_md")
 
-#Load model cleanly using streamlit's resource cache
-nlp = load_spatial_nlp()
+try:
+    nlp = spacy.load("en_core_web_md")
+except OSError:
+    download("en_core_web_md")
+    mlp = spacy.load("en_core_web_md")
 
 # Configure global multi-dimensional evaluation vectors
 CONCEPT_DOCS = {
