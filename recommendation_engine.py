@@ -73,6 +73,16 @@ USER_LOCATION = st.sidebar.text_input(
     "Project Geographic Location:", 
     placeholder="e.g., Chicago, IL or Paris, France"
 )
+
+# Configurable confidence threshold defaulting to your preferred 0.55
+CONFIDENCE_THRESHOLD = st.sidebar.slider(
+    "NLP Confidence Threshold:",
+    min_value=0.30,
+    max_value=0.85,
+    value=0.55,
+    step=0.05,
+)
+
 EXECUTE_ENGINE = st.sidebar.button("Run Spatial LCA Analysis", type="primary")
 
 # Initialize session state so results stay visible across reruns
@@ -86,6 +96,71 @@ if EXECUTE_ENGINE:
     st.session_state.saved_loc = USER_LOCATION
   else:
     st.sidebar.warning("Please enter both a description and a location.")
+
+# Silent Backend Classification Engine (Confidence Threshold = 0.55)
+def classify_project(description_text, confidence_threshold=0.55):
+  raw_doc = nlp(description_text.lower())
+
+  # Filter stop words and punctuation to sharpen semantic vector matching
+  clean_tokens = [
+      token.text for token in raw_doc if not token.is_stop and token.is_alpha
+  ]
+  clean_doc = nlp(" ".join(clean_tokens)) if clean_tokens else raw_doc
+
+  # 1. Extract NER scale cues (e.g., "5 GWH", "500 tons", "300 workers")
+  comm_boost, res_boost = 0.0, 0.0
+  for ent in raw_doc.ents:
+    if ent.label_ == "QUANTITY":
+      comm_boost += 0.12
+    elif ent.label_ == "CARDINAL":
+      digits = "".join(ch for ch in ent.text if ch.isdigit())
+      if digits and int(digits) >= 50:
+        comm_boost += 0.10
+      elif digits and 1 <= int(digits) <= 10:
+        res_boost += 0.05
+
+  # 2. Score scale against prototype sentences (combining full & clean docs)
+  commercial_score = (
+      max(
+          max(raw_doc.similarity(p), clean_doc.similarity(p))
+          for p in SCALE_PROTOTYPES["commercial_industrial"]
+      )
+      + comm_boost
+  )
+  residential_score = (
+      max(
+          max(raw_doc.similarity(p), clean_doc.similarity(p))
+          for p in SCALE_PROTOTYPES["residential_private"]
+      )
+      + res_boost
+  )
+
+  project_scale = (
+      "residential_private"
+      if residential_score > commercial_score
+      else "commercial_industrial"
+  )
+
+  # 3. Score technical LCA domains against prototype sentences
+  category_scores = {}
+  for cat, protos in DOMAIN_PROTOTYPES.items():
+    category_scores[cat] = max(
+        max(raw_doc.similarity(p), clean_doc.similarity(p)) for p in protos
+    )
+
+  # Apply 0.55 confidence threshold
+  matched = [
+      cat
+      for cat, score in category_scores.items()
+      if score >= confidence_threshold
+  ]
+
+  # Silent fallback: if no domain reaches 0.55, assign the single strongest domain
+  if not matched:
+    best_cat = max(category_scores, key=category_scores.get)
+    matched.append(best_cat)
+
+  return project_scale, matched
 # ==========================================
 # 4. STREAMLIT APP RUNTIME ROUTING PIPELINE
 # ==========================================
