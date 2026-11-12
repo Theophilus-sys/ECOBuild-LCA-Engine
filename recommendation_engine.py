@@ -26,14 +26,14 @@ st.caption(
 def load_nlp_model():
     nlp_model = spacy.load("en_core_web_md")
     CONCEPT_DOCS = {
-        "commercial_industrial": nlp("commercial industrial factory warehouse office skyscraper manufacturing enterprise production facility"),
-        "residential_private": nlp("residential private house home apartment villa duplex cottage living space domestic bungalow"),
+        "commercial_industrial": nlp_model("commercial industrial factory warehouse office skyscraper manufacturing enterprise production facility"),
+        "residential_private": nlp_model("residential private house home apartment villa duplex cottage living space domestic bungalow"),
 
-        "structure": nlp("building materials structural framework concrete steel foundation architecture framing"),
-        "energy": nlp("electricity power grid solar wind heating hvac utilities electrical"),
-        "logistics": nlp("shipping transport freight shipping container truck train ocean carrier cargo hauling"),
-        "chemicals": nlp("chemical manufacturing plant hydrogen ammonia refining methanol urea industrial synthesis"),
-        "ccu": nlp("carbon capture utilization greenhouse gas emissions offsets smokestack factory pollution co2 sequestration")
+        "structure": nlp_model("building materials structural framework concrete steel foundation architecture framing"),
+        "energy": nlp_model("electricity power grid solar wind heating hvac utilities electrical"),
+        "logistics": nlp_model("shipping transport freight shipping container truck train ocean carrier cargo hauling"),
+        "chemicals": nlp_model("chemical manufacturing plant hydrogen ammonia refining methanol urea industrial synthesis"),
+        "ccu": nlp_model("carbon capture utilization greenhouse gas emissions offsets smokestack factory pollution co2 sequestration")
     }
     return nlp_model, CONCEPT_DOCS
 
@@ -135,7 +135,7 @@ if st.session_state.analysis_active:
             st_folium(m, width="100%", height=220, key="streamlit_lca_map", returned_objects=[])
 
         # C. NLP Semantic Multi-Label Matrix Evaluation
-        user_doc = nlp(st.session_state.saved_desc.lower())
+        user_doc = nlp_model(st.session_state.saved_desc.lower())
 
         # Exclusive scale selection verification step
         commercial_score = user_doc.similarity(CONCEPT_DOCS["commercial_industrial"])
