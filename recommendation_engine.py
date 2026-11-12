@@ -3,10 +3,11 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 from geopy.geocoders import ArcGIS
-import spacy
-import subprocess
+import os 
 import sys
-
+import urllib.request
+import zipfile
+import spacy 
 # ==========================================
 # 1. APPLICATION GRAPHICS & PAGE CONFIG
 # ==========================================
@@ -29,15 +30,17 @@ st.caption(
 try:
     nlp = spacy.load("en_core_web_md")
 except OSError:
+    model_dir = "/tmp/spacy_models"
+    whl_path = "/tmp/en_core_web_md.whl"
     url = (
         "https://github.com"
         "en_core_web_md-3.8.0/en_core_web_md-3.8.0-py3-none-any.whl"
     )
-    subprocess.check_call([
-         sys.executable, "-m", "pip", "install",
-         "--target", "/tmp/spacy_models",url
-     ])
-    sys.path.append("/tmp/spacy_models")
+    os.makedirs(model_dir, exist_ok=True)
+    urllib.request.urlretrieve(url, whl_path)
+    with zipfile.ZipFile(whl_path, "r") as zf:
+        zf.extractall(model_dir)
+    sys.path.append(model_dir)
     nlp = spacy.load("en_core_web_md")
 
 # Configure global multi-dimensional evaluation vectors
