@@ -32,10 +32,7 @@ try:
 except OSError:
     model_dir = "/tmp/spacy_models"
     whl_path = "/tmp/en_core_web_md.whl"
-    url = (
-        "https://github.com"
-        "en_core_web_md-3.8.0/en_core_web_md-3.8.0-py3-none-any.whl"
-    )
+    url = "https://://github.comexplosion/spacy-models/releases/download/en_core_web_md-3.8.0/en_core_web_md-3.8.0-py3-none-any.whl"
     os.makedirs(model_dir, exist_ok=True)
     urllib.request.urlretrieve(url, whl_path)
     with zipfile.ZipFile(whl_path, "r") as zf:
