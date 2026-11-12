@@ -4,4 +4,4 @@ folium
 streamlit
 streamlit-folium
 spacy==3.8.0
-https://github.com
+en_core_web_md @ https://github.com
