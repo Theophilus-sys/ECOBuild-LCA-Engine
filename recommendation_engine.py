@@ -35,14 +35,14 @@ def load_nlp_model():
         "chemicals": nlp("chemical manufacturing plant hydrogen ammonia refining methanol urea industrial synthesis"),
         "ccu": nlp("carbon capture utilization greenhouse gas emissions offsets smokestack factory pollution co2 sequestration")
     }
-    return nlp, CONCEPT_DOCS
+    return nlp_model, CONCEPT_DOCS
 
 @st.cache_data(ttl=3600)
 def get_location(query):
     geolocator = ArcGIS()
     return geolocator.geocode(query, timeout=15)
 
-nlp, CONCEPT_DOCS = load_nlp_model()
+nlp_model, CONCEPT_DOCS = load_nlp_model()
 
 # Regional Database Parameters (Directly from your template architecture)
 regional_lca = {
