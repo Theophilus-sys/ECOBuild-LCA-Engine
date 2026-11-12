@@ -27,6 +27,7 @@ def load_nlp_model():
     return spacy.load("en_core_web_md")
 
 nlp = load_nlp_model()
+
 # Configure global multi-dimensional evaluation vectors
 CONCEPT_DOCS = {
     "commercial_industrial": nlp("commercial industrial factory warehouse office skyscraper manufacturing enterprise production facility"),
@@ -38,6 +39,14 @@ CONCEPT_DOCS = {
     "chemicals": nlp("chemical manufacturing plant hydrogen ammonia refining methanol urea industrial synthesis"),
     "ccu": nlp("carbon capture utilization greenhouse gas emissions offsets smokestack factory pollution co2 sequestration")
 }
+return nlp, CONCEPT_DOCS
+
+@st.cache_data(ttl=3600)
+def get_location(query):
+    geolocator = ArcGIS()
+    return geolocator.geocode(query, timeout=15)
+
+nlp, CONCEPT_DOCS = load_nlp_model()
 
 # Regional Database Parameters (Directly from your template architecture)
 regional_lca = {
@@ -70,14 +79,23 @@ USER_LOCATION = st.sidebar.text_input(
 )
 EXECUTE_ENGINE = st.sidebar.button("Run Spatial LCA Analysis", type="primary")
 
+# Initialize session state so results stay visible across reruns
+if "analysis_active" not in st.session_state:
+  st.session_state.analysis_active = False
+
+if EXECUTE_ENGINE:
+  if USER_LOCATION and USER_DESCRIPTION:
+    st.session_state.analysis_active = True
+    st.session_state.saved_desc = USER_DESCRIPTION
+    st.session_state.saved_loc = USER_LOCATION
+  else:
+    st.sidebar.warning("Please enter both a description and a location.")
 # ==========================================
 # 4. STREAMLIT APP RUNTIME ROUTING PIPELINE
 # ==========================================
-if EXECUTE_ENGINE and USER_LOCATION and USER_DESCRIPTION:
-
+if st.session_state.analysis_active:
     # A. Execute Enterprise Geolocation Call
-    geolocator = ArcGIS()
-    location = geolocator.geocode(USER_LOCATION, timeout=15)
+    location = get_location(st.session_state.saved_loc)
 
     if location is not None:
         lat = location.latitude
@@ -118,15 +136,15 @@ if EXECUTE_ENGINE and USER_LOCATION and USER_DESCRIPTION:
                 popup=f"Project Domain: {region_name}", 
                 icon=folium.Icon(color="green", icon="leaf")
             ).add_to(m)
-            st_folium(m, width="100%", height=220, key="streamlit_lca_map")
+            st_folium(m, width="100%", height=220, key="streamlit_lca_map", returned_objects=[])
 
         # C. NLP Semantic Multi-Label Matrix Evaluation
-        user_doc = nlp(USER_DESCRIPTION.lower())
+        user_doc = nlp(st.session_state.saved_desc.lower())
 
         # Exclusive scale selection verification step
         commercial_score = user_doc.similarity(CONCEPT_DOCS["commercial_industrial"])
         residential_score = user_doc.similarity(CONCEPT_DOCS["residential_private"])
-        project_scale = "residential_private" if residential_score > commercial_score else "commercial_industrial"
+        project_scale = ("residential_private" if residential_score > commercial_score else "commercial_industrial")
 
         # Map additional LCA impact criteria targets
         lca_categories = ["structure", "ccu", "energy","logistics","chemicals"]
@@ -170,3 +188,8 @@ if EXECUTE_ENGINE and USER_LOCATION and USER_DESCRIPTION:
                 * **Regional Baseline Metric Evaluation:** {profile['advice']} Sourcing continuous operational power directly from standard grid infrastructure generates a consistent carbon footprint profile of **{profile['GWP_kgCO2e']} kg CO2e** per unit of energy work.
                 * **Personalized Optimization Value:** Swapping operational dependency configurations to a dedicated alternative profile (like Onshore Wind at **{profile['Wind_GWP']} kg CO2e**) slashes your system's lifetime carbon burden by exactly **{saved_carbon} kg CO2e** per unit work cycle!
                 """)
+
+    else:
+        st.error(
+            f"Could not find coordinates for '{st.session_state.saved_loc}'. Please try a more specific city or country name"
+        )
