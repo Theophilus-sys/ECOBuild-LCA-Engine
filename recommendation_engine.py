@@ -3,10 +3,6 @@ import pandas as pd
 import folium
 from streamlit_folium import st_folium
 from geopy.geocoders import ArcGIS
-import os 
-import sys
-import urllib.request
-import zipfile
 import spacy 
 # ==========================================
 # 1. APPLICATION GRAPHICS & PAGE CONFIG
@@ -26,20 +22,11 @@ st.caption(
 # ==========================================
 # 2. CACHED RESOURCE LOADING (NLP Optimization)
 # ==========================================
+@st.cache_resource
+def load_nlp_model():
+    return spacy.load("en_core_web_md")
 
-try:
-    nlp = spacy.load("en_core_web_md")
-except OSError:
-    model_dir = "/tmp/spacy_models"
-    whl_path = "/tmp/en_core_web_md.whl"
-    url = "https://://://github.com/spacy-models/releases/download/en_core_web_md-3.8.0/en_core_web_md-3.8.0-py3-none-any.whl"
-    os.makedirs(model_dir, exist_ok=True)
-    urllib.request.urlretrieve(url, whl_path)
-    with zipfile.ZipFile(whl_path, "r") as zf:
-        zf.extractall(model_dir)
-    sys.path.append(model_dir)
-    nlp = spacy.load("en_core_web_md")
-
+nlp = load_nlp_model()
 # Configure global multi-dimensional evaluation vectors
 CONCEPT_DOCS = {
     "commercial_industrial": nlp("commercial industrial factory warehouse office skyscraper manufacturing enterprise production facility"),

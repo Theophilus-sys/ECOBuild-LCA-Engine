@@ -3,4 +3,5 @@ geopy
 folium
 streamlit
 streamlit-folium
-spacy
+spacy==3.8.0
+https://github.com
