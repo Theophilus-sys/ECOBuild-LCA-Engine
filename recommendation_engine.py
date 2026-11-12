@@ -24,22 +24,18 @@ st.caption(
 # ==========================================
 @st.cache_resource
 def load_nlp_model():
-    return spacy.load("en_core_web_md")
+    nlp_model = spacy.load("en_core_web_md")
+    CONCEPT_DOCS = {
+        "commercial_industrial": nlp("commercial industrial factory warehouse office skyscraper manufacturing enterprise production facility"),
+        "residential_private": nlp("residential private house home apartment villa duplex cottage living space domestic bungalow"),
 
-nlp = load_nlp_model()
-
-# Configure global multi-dimensional evaluation vectors
-CONCEPT_DOCS = {
-    "commercial_industrial": nlp("commercial industrial factory warehouse office skyscraper manufacturing enterprise production facility"),
-    "residential_private": nlp("residential private house home apartment villa duplex cottage living space domestic bungalow"),
-
-    "structure": nlp("building materials structural framework concrete steel foundation architecture framing"),
-    "energy": nlp("electricity power grid solar wind heating hvac utilities electrical"),
-    "logistics": nlp("shipping transport freight shipping container truck train ocean carrier cargo hauling"),
-    "chemicals": nlp("chemical manufacturing plant hydrogen ammonia refining methanol urea industrial synthesis"),
-    "ccu": nlp("carbon capture utilization greenhouse gas emissions offsets smokestack factory pollution co2 sequestration")
-}
-return nlp, CONCEPT_DOCS
+        "structure": nlp("building materials structural framework concrete steel foundation architecture framing"),
+        "energy": nlp("electricity power grid solar wind heating hvac utilities electrical"),
+        "logistics": nlp("shipping transport freight shipping container truck train ocean carrier cargo hauling"),
+        "chemicals": nlp("chemical manufacturing plant hydrogen ammonia refining methanol urea industrial synthesis"),
+        "ccu": nlp("carbon capture utilization greenhouse gas emissions offsets smokestack factory pollution co2 sequestration")
+    }
+    return nlp, CONCEPT_DOCS
 
 @st.cache_data(ttl=3600)
 def get_location(query):
