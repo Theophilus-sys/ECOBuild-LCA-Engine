@@ -4,6 +4,7 @@ import folium
 from streamlit_folium import st_folium
 from geopy.geocoders import ArcGIS
 import spacy
+from spacy.cli import download
 
 # ==========================================
 # 1. APPLICATION GRAPHICS & PAGE CONFIG
@@ -24,7 +25,12 @@ st.caption(
 # 2. CACHED RESOURCE LOADING (NLP Optimization)
 # ==========================================
 
-nlp = spacy.load("en_core_web_md")
+try:
+    nlp = spacy.load("en_core_web_md")
+except OSError:
+    download("en_core_web_md", "--target","/tmp/spacy_models")
+    nlp = spacy.load("/tmp/spacy_models/en_core_web_md/en_core_web_md-3.8.0")
+
 # Configure global multi-dimensional evaluation vectors
 CONCEPT_DOCS = {
     "commercial_industrial": nlp("commercial industrial factory warehouse office skyscraper manufacturing enterprise production facility"),
